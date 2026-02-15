@@ -57,15 +57,16 @@ def _build_tvl_section(detail, history_days):
     # Slice to requested number of days
     recent = tvl_history[-history_days:] if tvl_history else []
 
+    # Resample to monthly (last entry per calendar month)
+    monthly = {}
+    for entry in recent:
+        iso = _unix_to_iso_date(entry["date"])
+        month_key = iso[:7]  # "YYYY-MM"
+        monthly[month_key] = {"date": iso, "tvl_usd": entry["totalLiquidityUSD"]}
+
     return {
         "current_tvl_usd": current_tvl,
-        "tvl_history": [
-            {
-                "date": _unix_to_iso_date(entry["date"]),
-                "tvl_usd": entry["totalLiquidityUSD"],
-            }
-            for entry in recent
-        ],
+        "tvl_history": list(monthly.values()),
     }
 
 

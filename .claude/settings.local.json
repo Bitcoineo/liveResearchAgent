@@ -14,7 +14,24 @@
       "Bash(pip install:*)",
       "Bash(python main.py:*)",
       "Bash(python:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(pkill:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:altcoinsbox.com)",
+      "WebFetch(domain:logotyp.us)",
+      "WebFetch(domain:aave.com)",
+      "WebFetch(domain:static.lido.fi)",
+      "WebFetch(domain:docs.ethena.fi)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:1000logos.net)",
+      "WebFetch(domain:seekvectors.com)",
+      "WebFetch(domain:www.publish0x.com)",
+      "WebFetch(domain:cryptologos.cc)",
+      "WebFetch(domain:brandfetch.com)",
+      "WebFetch(domain:dribbble.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:svgstack.com)",
+      "Bash(gh api:*)"
     ]
   }
 }

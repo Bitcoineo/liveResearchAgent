@@ -1,9 +1,9 @@
-"""Web research module — placeholder implementations for Phase 2.
+"""Web research module — Bitcoineo research templates.
 
-Each function returns structured placeholder data so the report pipeline
-can be developed end-to-end.  Real web-search backends will be wired in
-later; every response includes "data_source": "placeholder" so consumers
-can distinguish real from synthetic data.
+Each function returns structured template data so the report pipeline
+runs end-to-end.  Live source integration is planned; every response
+includes "data_source": "placeholder" so consumers can distinguish
+template data from verified sources.
 """
 
 

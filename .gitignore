@@ -1,0 +1,6 @@
+.claude/
+settings_local.json
+__pycache__/
+reports/
+.env
+.DS_Store

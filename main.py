@@ -40,7 +40,7 @@ def main():
         description="Generate a DeFi protocol research report from DeFiLlama data."
     )
     parser.add_argument("protocol", help="Protocol name (e.g., 'aave', 'uniswap', 'lido')")
-    parser.add_argument("--days", type=int, default=30, help="Days of TVL history (default: 30)")
+    parser.add_argument("--days", type=int, default=180, help="Days of TVL history (default: 180)")
     parser.add_argument("--json", action="store_true", dest="raw_json", help="Output raw JSON")
     args = parser.parse_args()
 

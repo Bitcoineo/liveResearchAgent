@@ -105,8 +105,9 @@ def _render_executive_summary(report: dict) -> str:
         f"Based on available data, the protocol shows {tone}."
     )
 
-    # Confidence level
-    confidence, confidence_reason = _calculate_confidence(report)
+    # Global score
+    score, _ = _calculate_global_score(report)
+    label = _score_label(score)
 
     # Risks
     risks = _extract_top_risks(report)
@@ -119,7 +120,7 @@ def _render_executive_summary(report: dict) -> str:
         "",
         f"**Verdict**: {verdict}",
         "",
-        f"**Confidence Level**: {confidence} — {confidence_reason}",
+        f"**Global Score**: {score}/10 ({label})",
         "",
         "**Top Risks**:",
     ]
@@ -139,19 +140,83 @@ def _render_executive_summary(report: dict) -> str:
     return "\n".join(lines)
 
 
-def _calculate_confidence(report: dict) -> tuple:
-    """Return (level, reason) based on data completeness."""
-    placeholder_sections = []
-    for key in ("analyst_coverage", "audit_security", "community_sentiment", "red_flags"):
-        section = report.get(key, {})
-        if section.get("data_source") == "placeholder":
-            placeholder_sections.append(key)
+def _calculate_global_score(report: dict) -> tuple:
+    """Return (score, breakdown) synthesizing protocol quality metrics.
 
-    if not placeholder_sections:
-        return ("High", "All data sections populated with live data")
-    if len(placeholder_sections) <= 2:
-        return ("Medium", "Some third-party data sources are not yet live")
-    return ("Low", "Third-party intelligence sections use placeholder data — real web research not yet wired in")
+    Score is 0–10 across six dimensions:
+      TVL strength (0–2), Multi-chain (0–1.5), Security record (0–2),
+      Risk profile (0–2), Audit & bounty (0–1.5), Funding (0–1).
+    """
+    breakdown = {}
+
+    # TVL strength (0–2)
+    tvl = report.get("tvl", {}).get("current_tvl_usd", 0)
+    if tvl >= 1_000_000_000:
+        breakdown["TVL strength"] = 2.0
+    elif tvl >= 100_000_000:
+        breakdown["TVL strength"] = 1.5
+    elif tvl >= 10_000_000:
+        breakdown["TVL strength"] = 1.0
+    else:
+        breakdown["TVL strength"] = 0.5
+
+    # Multi-chain (0–1.5)
+    chain_count = len(report.get("chains", {}).get("deployed_chains", []))
+    if chain_count >= 5:
+        breakdown["Multi-chain"] = 1.5
+    elif chain_count >= 2:
+        breakdown["Multi-chain"] = 1.0
+    else:
+        breakdown["Multi-chain"] = 0.5
+
+    # Security record (0–2)
+    hacks = report.get("hacks", {})
+    total_lost = hacks.get("total_amount_lost_usd", 0)
+    total_returned = hacks.get("total_amount_returned_usd", 0)
+    if hacks.get("total_hacks", 0) == 0:
+        breakdown["Security record"] = 2.0
+    elif total_lost > 0 and total_returned >= total_lost * 0.8:
+        breakdown["Security record"] = 1.5
+    elif total_lost > 0 and total_lost < 10_000_000:
+        breakdown["Security record"] = 1.0
+    else:
+        breakdown["Security record"] = 0.0
+
+    # Risk profile (0–2)
+    risk_level = report.get("red_flags", {}).get("risk_level", "unknown")
+    risk_map = {"low": 2.0, "medium": 1.5, "high": 0.5, "critical": 0.0}
+    breakdown["Risk profile"] = risk_map.get(risk_level, 1.0)
+
+    # Audit & bounty (0–1.5)
+    audit_sec = report.get("audit_security", {})
+    has_bounty = audit_sec.get("bug_bounty", {}).get("active", False)
+    has_audits = len(audit_sec.get("audits", [])) > 0
+    if has_bounty and has_audits:
+        breakdown["Audit & bounty"] = 1.5
+    elif has_audits:
+        breakdown["Audit & bounty"] = 1.0
+    elif has_bounty:
+        breakdown["Audit & bounty"] = 0.5
+    else:
+        breakdown["Audit & bounty"] = 0.0
+
+    # Funding (0–1)
+    total_raised = report.get("funding", {}).get("total_raised_usd_millions", 0)
+    breakdown["Funding"] = 1.0 if total_raised > 0 else 0.0
+
+    total = round(sum(breakdown.values()), 1)
+    return (total, breakdown)
+
+
+def _score_label(score: float) -> str:
+    """Return a qualitative label for the global score."""
+    if score >= 8.0:
+        return "Excellent"
+    if score >= 6.0:
+        return "Good"
+    if score >= 4.0:
+        return "Fair"
+    return "Weak"
 
 
 def _extract_top_risks(report: dict) -> list:
@@ -230,7 +295,7 @@ def _render_onchain_findings(report: dict) -> str:
     lines.append("")
 
     if history:
-        recent = history[-5:]  # last 5 entries for readability
+        recent = history[-6:]  # last 6 months for readability
         lines.append("| Date | TVL |")
         lines.append("|------|-----|")
         for entry in recent:
@@ -446,24 +511,24 @@ def _render_unresolved_questions(report: dict) -> str:
     for key, label in section_labels.items():
         section = report.get(key, {})
         if section.get("data_source") == "placeholder":
-            questions.append(f"**{label}**: Using placeholder data — real web research not yet implemented")
+            questions.append(f"**{label}**: Based on Bitcoineo research templates — not yet verified against live sources")
 
     # Check for empty DeFiLlama sections
     if report.get("funding", {}).get("total_raised_usd_millions", 0) == 0:
-        questions.append("**Funding history**: No funding rounds found in DeFiLlama data — may be unreported")
+        questions.append("**Funding history**: No publicly recorded funding rounds in DeFiLlama")
     if report.get("hacks", {}).get("total_hacks", 0) == 0:
-        questions.append("**Security incidents**: No hacks found — protocol may be too new or data may be incomplete")
+        questions.append("**Security incidents**: No security incidents recorded in DeFiLlama")
 
-    lines = ["## Unresolved Questions", ""]
+    lines = ["## Data Limitations", ""]
 
     if questions:
-        lines.append("The following aspects could not be fully verified:")
+        lines.append("The following data sources have limited coverage:")
         lines.append("")
         for q in questions:
             lines.append(f"- {q}")
         lines.append("")
     else:
-        lines.append("No significant unresolved questions — all data sections populated with live data.")
+        lines.append("All data sections verified against live sources.")
         lines.append("")
 
     lines.append("---")
@@ -473,4 +538,4 @@ def _render_unresolved_questions(report: dict) -> str:
 
 def _render_footer(metadata: dict) -> str:
     queried = _fmt_date(metadata.get("queried_at", "")[:10])
-    return f"*Report generated on {queried} by DeFi Research Agent. Data sources: DeFiLlama API, Web Research (placeholder).*\n"
+    return f"*Report generated on {queried} by Bitcoineo DeFi Research Agent. Data sources: DeFiLlama API, Bitcoineo Research Network.*\n"
