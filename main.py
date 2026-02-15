@@ -1,10 +1,13 @@
-"""DeFi research agent — Phase 1: DeFiLlama data reports."""
+"""DeFi research agent — DeFiLlama data + web research reports."""
 
 import argparse
 import json
 import sys
+from datetime import date
+from pathlib import Path
 
 from defillama import DefiLlamaClient, DefiLlamaAPIError, ProtocolNotFoundError
+from markdown_report import render_markdown
 from report import build_report
 from web_research import (
     search_analyst_coverage,
@@ -51,6 +54,16 @@ def main():
     except DefiLlamaAPIError as e:
         print(f"API Error: {e}", file=sys.stderr)
         sys.exit(1)
+
+    # Save markdown report to reports/ directory
+    md = render_markdown(report)
+    slug = report["metadata"]["slug"]
+    filename = f"{slug}-{date.today().isoformat()}.md"
+    reports_dir = Path("reports")
+    reports_dir.mkdir(exist_ok=True)
+    report_path = reports_dir / filename
+    report_path.write_text(md)
+    print(f"Report saved to {report_path}", file=sys.stderr)
 
     if args.raw_json:
         print(json.dumps(report))
