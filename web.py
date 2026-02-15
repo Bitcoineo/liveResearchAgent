@@ -436,7 +436,6 @@ a:hover{color:var(--accent-light)}
         <span>Maker</span>
       </div>
     </div>
-  </div>
 
     <div class="social-bar">
       <span class="social-cta">Follow me</span>
@@ -452,7 +451,7 @@ a:hover{color:var(--accent-light)}
         </a>
       </div>
     </div>
-  </div>
+  </div>  <!-- .hero-content -->
 </div>
 
 <!-- ════════ State Container (loading / error / report) ════════ -->
