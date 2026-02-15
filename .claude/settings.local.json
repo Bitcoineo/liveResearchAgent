@@ -31,7 +31,8 @@
       "WebFetch(domain:dribbble.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:svgstack.com)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

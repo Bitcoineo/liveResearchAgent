@@ -156,12 +156,28 @@ a:hover{color:var(--accent-light)}
 }
 .generate-btn:active{transform:scale(0.97)}
 
+/* ─── Toggle Row ─── */
+.toggle-row{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:24px;
+  opacity:0;animation:fadeUp 0.8s ease forwards;
+  animation-delay:0.4s;
+}
+.toggle-label{
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);
+}
+.toggle-label input[type="checkbox"]{
+  width:18px;height:18px;accent-color:var(--accent);cursor:pointer;
+}
+.toggle-hint{font-size:12px;color:var(--text-dim)}
+
 /* ─── Protocol Grid ─── */
 .protocol-grid{
   display:flex;flex-wrap:wrap;gap:12px;
   justify-content:center;max-width:600px;
   opacity:0;animation:fadeUp 0.8s ease forwards;
-  animation-delay:0.5s;
+  animation-delay:0.6s;
 }
 .protocol-card{
   display:flex;align-items:center;gap:10px;
@@ -181,11 +197,15 @@ a:hover{color:var(--accent-light)}
 .protocol-card span{font-size:14px;font-weight:500;color:var(--text)}
 
 /* ─── Social Buttons ─── */
-.social-buttons{
-  position:fixed;bottom:24px;right:24px;
-  display:flex;gap:10px;z-index:10;
+.social-bar{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  margin-top:48px;
   opacity:0;animation:fadeUp 0.8s ease forwards;
   animation-delay:0.8s;
+}
+.social-cta{font-size:13px;color:var(--text-dim);font-weight:500;letter-spacing:0.2px}
+.social-buttons{
+  display:flex;gap:10px;
 }
 .social-btn{
   display:flex;align-items:center;justify-content:center;
@@ -364,7 +384,7 @@ a:hover{color:var(--accent-light)}
   .generate-btn{padding:8px 16px;font-size:13px;height:38px}
   .protocol-grid{gap:8px}
   .protocol-card{padding:8px 14px}
-  .social-buttons{bottom:16px;right:16px;gap:8px}
+  .social-bar{margin-top:32px}
   .social-btn{width:38px;height:38px}
   .social-btn svg{width:16px;height:16px}
   #state-container{padding:40px 16px 40px}
@@ -384,6 +404,14 @@ a:hover{color:var(--accent-light)}
       <input type="text" id="protocol-input" class="search-bar"
              placeholder="Search protocol (e.g. aave, lido, uniswap)..." autocomplete="off">
       <button class="generate-btn" onclick="generateReport()">Generate</button>
+    </div>
+
+    <div class="toggle-row">
+      <label class="toggle-label">
+        <input type="checkbox" id="verified-toggle" checked>
+        <span>Verified data only</span>
+      </label>
+      <span class="toggle-hint">(uncheck to include research templates)</span>
     </div>
 
     <div class="protocol-grid">
@@ -410,14 +438,20 @@ a:hover{color:var(--accent-light)}
     </div>
   </div>
 
-  <!-- Social buttons (floating) -->
-  <div class="social-buttons">
-    <a href="https://x.com/AlexxisLaporte" target="_blank" rel="noopener" class="social-btn" title="Twitter / X">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    </a>
-    <a href="https://github.com/AlexxisLaporte" target="_blank" rel="noopener" class="social-btn" title="GitHub">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
-    </a>
+    <div class="social-bar">
+      <span class="social-cta">Follow me</span>
+      <div class="social-buttons">
+        <a href="https://x.com/Bitcoineo" target="_blank" rel="noopener" class="social-btn" title="Twitter / X">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="https://github.com/Bitcoineo" target="_blank" rel="noopener" class="social-btn" title="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        </a>
+        <a href="https://bitcoineo.vercel.app/" target="_blank" rel="noopener" class="social-btn" title="Website">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -496,6 +530,7 @@ async function generateReport() {
   const protocol = input.value.trim();
   if (!protocol) { input.focus(); return; }
 
+  const verifiedOnly = document.getElementById("verified-toggle").checked;
   showView("loading");
 
   try {
@@ -504,7 +539,7 @@ async function generateReport() {
     const resp = await fetch("/api/report", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({protocol: protocol}),
+      body: JSON.stringify({protocol: protocol, verified_only: verifiedOnly}),
       signal: controller.signal
     });
     clearTimeout(timeout);
@@ -565,6 +600,12 @@ function enhanceReport(html) {
     }
   );
 
+  // Template data warning banners — amber styling
+  html = html.replace(
+    /<blockquote>\s*<p>\s*⚠️\s*<strong>Template Data<\/strong>/g,
+    '<blockquote style="border-left-color:#d97706;background:rgba(245,158,11,0.08);"><p>⚠️ <strong>Template Data</strong>'
+  );
+
   // Sentiment badges in tables and inline
   html = html.replace(/>\s*Positive\s*</g, '><span class="badge badge-green">Positive</span><');
   html = html.replace(/>\s*Negative\s*</g, '><span class="badge badge-red">Negative</span><');
@@ -612,8 +653,8 @@ function newReport() {
 </html>"""
 
 
-def _run_report(protocol_name: str) -> tuple:
-    """Run the full report pipeline. Returns (markdown, filename, report_dict)."""
+def _run_report(protocol_name: str, verified_only: bool = True) -> tuple:
+    """Run the full report pipeline. Returns (markdown, filename)."""
     client = DefiLlamaClient()
     meta = client.resolve_protocol(protocol_name)
     detail = client.get_protocol_detail(meta["slug"])
@@ -621,14 +662,16 @@ def _run_report(protocol_name: str) -> tuple:
     child_names = [c["name"] for c in meta["children"]]
     hacks = client.find_hacks_for_protocol(meta["name"], child_names)
 
-    web_research = {
-        "analyst_coverage": search_analyst_coverage(meta["name"]),
-        "audit_reports": search_audit_reports(meta["name"]),
-        "community_sentiment": search_community_sentiment(meta["name"]),
-        "red_flags": search_red_flags(meta["name"]),
-    }
+    web_research = None
+    if not verified_only:
+        web_research = {
+            "analyst_coverage": search_analyst_coverage(meta["name"]),
+            "audit_reports": search_audit_reports(meta["name"]),
+            "community_sentiment": search_community_sentiment(meta["name"]),
+            "red_flags": search_red_flags(meta["name"]),
+        }
 
-    report = build_report(detail, meta, hacks, tvl_history_days=180, web_research=web_research)
+    report = build_report(detail, meta, hacks, tvl_history_days=180, web_research=web_research, verified_only=verified_only)
     md = render_markdown(report)
 
     slug = report["metadata"]["slug"]
@@ -673,12 +716,13 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         protocol = body.get("protocol", "").strip()
+        verified_only = body.get("verified_only", True)
         if not protocol:
             self._json_error(400, "Missing 'protocol' field")
             return
 
         try:
-            md, filename = _run_report(protocol)
+            md, filename = _run_report(protocol, verified_only=verified_only)
             self._json_response(200, {"success": True, "markdown": md, "filename": filename})
         except ProtocolNotFoundError as e:
             self._json_error(404, str(e))

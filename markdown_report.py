@@ -82,15 +82,18 @@ def _render_executive_summary(report: dict) -> str:
     tvl = report.get("tvl", {})
     chains = report.get("chains", {})
     red_flags = report.get("red_flags", {})
+    verified_only = report.get("verified_only", False)
 
     name = metadata["protocol_name"]
     category = metadata.get("category", "Unknown")
     current_tvl = _fmt_usd(tvl.get("current_tvl_usd", 0))
     chain_count = len(chains.get("deployed_chains", []))
-    risk_level = red_flags.get("risk_level", "unknown")
+    risk_level = red_flags.get("risk_level", "unknown") if red_flags else "unknown"
 
     # Verdict
-    if risk_level in ("low",):
+    if verified_only:
+        tone = "a profile based on on-chain data — enable full report for risk assessment"
+    elif risk_level in ("low",):
         tone = "strong fundamentals with limited risk indicators"
     elif risk_level in ("medium",):
         tone = "solid fundamentals with moderate risk factors worth monitoring"
@@ -106,7 +109,7 @@ def _render_executive_summary(report: dict) -> str:
     )
 
     # Global score
-    score, _ = _calculate_global_score(report)
+    score, breakdown = _calculate_global_score(report)
     label = _score_label(score)
 
     # Risks
@@ -122,8 +125,24 @@ def _render_executive_summary(report: dict) -> str:
         "",
         f"**Global Score**: {score}/10 ({label})",
         "",
-        "**Top Risks**:",
     ]
+
+    if verified_only:
+        lines.append("*Score based on on-chain data only — web research sections excluded.*")
+        lines.append("")
+
+    # Score breakdown
+    lines.append("**Score Breakdown**:")
+    lines.append("")
+    for dimension, value in breakdown.items():
+        if value is None:
+            lines.append(f"- {dimension}: *N/A (on-chain data only)*")
+        else:
+            sign = "+" if value >= 0 else ""
+            lines.append(f"- {dimension}: {sign}{value}")
+    lines.append("")
+
+    lines.append("**Top Risks**:")
     for i, risk in enumerate(risks[:3], 1):
         lines.append(f"{i}. {risk}")
     if not risks:
@@ -143,69 +162,110 @@ def _render_executive_summary(report: dict) -> str:
 def _calculate_global_score(report: dict) -> tuple:
     """Return (score, breakdown) synthesizing protocol quality metrics.
 
-    Score is 0–10 across six dimensions:
-      TVL strength (0–2), Multi-chain (0–1.5), Security record (0–2),
-      Risk profile (0–2), Audit & bounty (0–1.5), Funding (0–1).
+    Uses continuous scales with diminishing returns instead of step functions.
+    On-chain dimensions (always available):
+      TVL strength (0–2.5), Multi-chain (0–1.5), Security record (−3–2),
+      Funding (0–1.5).
+    Web-research dimensions (only when verified_only=False):
+      Risk profile (−2–2), Audit & bounty (0–1.5).
+    Raw sum is normalized to 0–10.
     """
+    import math
     breakdown = {}
+    verified_only = report.get("verified_only", False)
 
-    # TVL strength (0–2)
+    # --- TVL strength (0–2.5) — logarithmic, diminishing above $10B ---
     tvl = report.get("tvl", {}).get("current_tvl_usd", 0)
-    if tvl >= 1_000_000_000:
-        breakdown["TVL strength"] = 2.0
+    if tvl <= 0:
+        breakdown["TVL strength"] = 0.0
+    elif tvl >= 10_000_000_000:
+        extra = min(0.5, 0.5 * math.log10(tvl / 10_000_000_000) / math.log10(10))
+        breakdown["TVL strength"] = round(2.0 + extra, 2)
+    elif tvl >= 1_000_000_000:
+        breakdown["TVL strength"] = round(1.5 + 0.5 * (tvl - 1e9) / (10e9 - 1e9), 2)
     elif tvl >= 100_000_000:
-        breakdown["TVL strength"] = 1.5
-    elif tvl >= 10_000_000:
-        breakdown["TVL strength"] = 1.0
+        breakdown["TVL strength"] = round(1.0 + 0.5 * (tvl - 1e8) / (1e9 - 1e8), 2)
+    elif tvl >= 1_000_000:
+        breakdown["TVL strength"] = round(0.3 + 0.7 * (tvl - 1e6) / (1e8 - 1e6), 2)
     else:
-        breakdown["TVL strength"] = 0.5
+        breakdown["TVL strength"] = 0.1
 
-    # Multi-chain (0–1.5)
+    # --- Multi-chain (0–1.5) — continuous, diminishing returns ---
     chain_count = len(report.get("chains", {}).get("deployed_chains", []))
-    if chain_count >= 5:
-        breakdown["Multi-chain"] = 1.5
-    elif chain_count >= 2:
-        breakdown["Multi-chain"] = 1.0
+    if chain_count <= 1:
+        breakdown["Multi-chain"] = 0.0
+    elif chain_count <= 3:
+        breakdown["Multi-chain"] = round(0.3 * chain_count, 2)
+    elif chain_count <= 10:
+        breakdown["Multi-chain"] = round(0.9 + 0.06 * (chain_count - 3), 2)
     else:
-        breakdown["Multi-chain"] = 0.5
+        breakdown["Multi-chain"] = min(1.5, round(1.32 + 0.02 * (chain_count - 10), 2))
 
-    # Security record (0–2)
+    # --- Security record (−3 to 2) — penalty-based, scaled by loss ---
     hacks = report.get("hacks", {})
     total_lost = hacks.get("total_amount_lost_usd", 0)
     total_returned = hacks.get("total_amount_returned_usd", 0)
-    if hacks.get("total_hacks", 0) == 0:
+    hack_count = hacks.get("total_hacks", 0)
+    if hack_count == 0:
         breakdown["Security record"] = 2.0
-    elif total_lost > 0 and total_returned >= total_lost * 0.8:
-        breakdown["Security record"] = 1.5
-    elif total_lost > 0 and total_lost < 10_000_000:
-        breakdown["Security record"] = 1.0
     else:
-        breakdown["Security record"] = 0.0
+        net_loss = max(0, total_lost - total_returned)
+        penalty = 0.5  # base penalty for any hack
+        if net_loss >= 100_000_000:
+            penalty += 2.5
+        elif net_loss >= 10_000_000:
+            penalty += 1.5
+        elif net_loss >= 1_000_000:
+            penalty += 0.8
+        else:
+            penalty += 0.3
+        penalty += 0.3 * min(hack_count - 1, 3)
+        breakdown["Security record"] = round(max(-3.0, 2.0 - penalty), 2)
 
-    # Risk profile (0–2)
-    risk_level = report.get("red_flags", {}).get("risk_level", "unknown")
-    risk_map = {"low": 2.0, "medium": 1.5, "high": 0.5, "critical": 0.0}
-    breakdown["Risk profile"] = risk_map.get(risk_level, 1.0)
-
-    # Audit & bounty (0–1.5)
-    audit_sec = report.get("audit_security", {})
-    has_bounty = audit_sec.get("bug_bounty", {}).get("active", False)
-    has_audits = len(audit_sec.get("audits", [])) > 0
-    if has_bounty and has_audits:
-        breakdown["Audit & bounty"] = 1.5
-    elif has_audits:
-        breakdown["Audit & bounty"] = 1.0
-    elif has_bounty:
-        breakdown["Audit & bounty"] = 0.5
-    else:
-        breakdown["Audit & bounty"] = 0.0
-
-    # Funding (0–1)
+    # --- Funding (0–1.5) — graduated ---
     total_raised = report.get("funding", {}).get("total_raised_usd_millions", 0)
-    breakdown["Funding"] = 1.0 if total_raised > 0 else 0.0
+    if total_raised <= 0:
+        breakdown["Funding"] = 0.0
+    elif total_raised >= 100:
+        breakdown["Funding"] = 1.5
+    elif total_raised >= 50:
+        breakdown["Funding"] = 1.2
+    elif total_raised >= 10:
+        breakdown["Funding"] = 0.8
+    else:
+        breakdown["Funding"] = 0.4
 
-    total = round(sum(breakdown.values()), 1)
-    return (total, breakdown)
+    # --- Web-research dimensions (only when templates included) ---
+    if not verified_only:
+        # Risk profile — per-flag penalty
+        flags = report.get("red_flags", {}).get("flags", [])
+        severity_penalties = {"critical": 2.0, "high": 1.5, "medium": 1.0, "low": 0.5}
+        flag_penalty = sum(severity_penalties.get(f.get("severity", "low"), 0.5) for f in flags)
+        breakdown["Risk profile"] = round(max(-2.0, 2.0 - flag_penalty), 2)
+
+        # Audit & bounty
+        audit_sec = report.get("audit_security", {})
+        has_bounty = audit_sec.get("bug_bounty", {}).get("active", False)
+        has_audits = len(audit_sec.get("audits", [])) > 0
+        if has_bounty and has_audits:
+            breakdown["Audit & bounty"] = 1.5
+        elif has_audits:
+            breakdown["Audit & bounty"] = 1.0
+        elif has_bounty:
+            breakdown["Audit & bounty"] = 0.5
+        else:
+            breakdown["Audit & bounty"] = 0.0
+    else:
+        breakdown["Risk profile"] = None
+        breakdown["Audit & bounty"] = None
+
+    # --- Normalize to 0–10 ---
+    active_values = [v for v in breakdown.values() if v is not None]
+    raw_total = sum(active_values)
+    max_possible = 7.5 if verified_only else 11.0
+    score = round(max(0, min(10, (raw_total / max_possible) * 10)), 1)
+
+    return (score, breakdown)
 
 
 def _score_label(score: float) -> str:
@@ -385,6 +445,14 @@ def _render_onchain_findings(report: dict) -> str:
     return "\n".join(lines)
 
 
+_TEMPLATE_BANNER = "> ⚠️ **Template Data** — This section uses research templates and has not been verified against live sources."
+
+
+def _is_placeholder_url(url: str) -> bool:
+    """Return True if the URL points to a placeholder/example domain."""
+    return "example.com" in url
+
+
 def _render_third_party_intel(report: dict) -> str:
     analyst = report.get("analyst_coverage")
     audit = report.get("audit_security")
@@ -400,6 +468,9 @@ def _render_third_party_intel(report: dict) -> str:
     if analyst:
         lines.append("### Analyst Coverage")
         lines.append("")
+        if analyst.get("data_source") == "placeholder":
+            lines.append(_TEMPLATE_BANNER)
+            lines.append("")
         articles = analyst.get("articles", [])
         if articles:
             for a in articles:
@@ -408,7 +479,7 @@ def _render_third_party_intel(report: dict) -> str:
                 source = a.get("source", "Unknown")
                 date = _fmt_date(a.get("date", ""))
                 summary = a.get("summary", "")
-                if url:
+                if url and not _is_placeholder_url(url):
                     lines.append(f"**[{title}]({url})** — {source} ({date})")
                 else:
                     lines.append(f"**{title}** — {source} ({date})")
@@ -422,6 +493,9 @@ def _render_third_party_intel(report: dict) -> str:
     if audit:
         lines.append("### Security & Audits")
         lines.append("")
+        if audit.get("data_source") == "placeholder":
+            lines.append(_TEMPLATE_BANNER)
+            lines.append("")
         audits = audit.get("audits", [])
         if audits:
             lines.append("| Auditor | Date | Scope | Findings |")
@@ -444,6 +518,9 @@ def _render_third_party_intel(report: dict) -> str:
     if sentiment:
         lines.append("### Community Sentiment")
         lines.append("")
+        if sentiment.get("data_source") == "placeholder":
+            lines.append(_TEMPLATE_BANNER)
+            lines.append("")
         overall = sentiment.get("overall_sentiment", "unknown").capitalize()
         lines.append(f"**Overall Sentiment**: {overall}")
         lines.append("")
@@ -477,9 +554,14 @@ def _render_red_flags(red_flags: dict | None) -> str:
     lines = [
         "## Red Flags Register",
         "",
-        f"**Overall Risk Level**: {risk_level}",
-        "",
     ]
+
+    if red_flags.get("data_source") == "placeholder":
+        lines.append(_TEMPLATE_BANNER)
+        lines.append("")
+
+    lines.append(f"**Overall Risk Level**: {risk_level}")
+    lines.append("")
 
     if flags:
         for i, flag in enumerate(flags, 1):

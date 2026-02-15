@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from defillama import AGGREGATE_TVL_KEYS
 
 
-def build_report(protocol_detail, protocol_meta, hacks, tvl_history_days=30, web_research=None):
+def build_report(protocol_detail, protocol_meta, hacks, tvl_history_days=30, web_research=None, verified_only=False):
     """Build a structured report dict from raw API data.
 
     Args:
@@ -15,9 +15,11 @@ def build_report(protocol_detail, protocol_meta, hacks, tvl_history_days=30, web
         tvl_history_days: Number of days of TVL history to include
         web_research: Optional dict with keys analyst_coverage, audit_reports,
                       community_sentiment, red_flags from the web_research module
+        verified_only: If True, only include verified on-chain data
     """
     report = {
         "metadata": _build_metadata(protocol_detail, protocol_meta),
+        "verified_only": verified_only,
         "tvl": _build_tvl_section(protocol_detail, tvl_history_days),
         "chains": _build_chains_section(protocol_detail),
         "funding": _build_funding_section(protocol_detail),
