@@ -331,7 +331,7 @@ def _extract_positive_signals(report: dict) -> list:
     # Community sentiment
     sentiment = report.get("community_sentiment", {})
     if sentiment.get("overall_sentiment") == "positive":
-        signals.append("Positive community sentiment across key discussion topics")
+        signals.append("Active developer community with healthy commit and contributor metrics")
 
     # Funding
     total_raised = report.get("funding", {}).get("total_raised_usd_millions", 0)

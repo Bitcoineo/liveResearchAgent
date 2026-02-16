@@ -28,10 +28,10 @@ def run_report(client, protocol_name, tvl_days=180, verified_only=True):
     web_research = None
     if not verified_only:
         web_research = {
-            "analyst_coverage": search_analyst_coverage(meta["name"]),
+            "analyst_coverage": search_analyst_coverage(meta["name"], protocol_detail=detail),
             "audit_reports": search_audit_reports(meta["name"]),
-            "community_sentiment": search_community_sentiment(meta["name"]),
-            "red_flags": search_red_flags(meta["name"]),
+            "community_sentiment": search_community_sentiment(meta["name"], protocol_detail=detail),
+            "red_flags": search_red_flags(meta["name"], protocol_detail=detail, hacks=hacks),
         }
 
     return build_report(detail, meta, hacks, tvl_history_days=tvl_days, web_research=web_research, verified_only=verified_only)

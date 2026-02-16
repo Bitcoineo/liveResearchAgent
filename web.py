@@ -664,10 +664,10 @@ def _run_report(protocol_name: str, verified_only: bool = True) -> tuple:
     web_research = None
     if not verified_only:
         web_research = {
-            "analyst_coverage": search_analyst_coverage(meta["name"]),
+            "analyst_coverage": search_analyst_coverage(meta["name"], protocol_detail=detail),
             "audit_reports": search_audit_reports(meta["name"]),
-            "community_sentiment": search_community_sentiment(meta["name"]),
-            "red_flags": search_red_flags(meta["name"]),
+            "community_sentiment": search_community_sentiment(meta["name"], protocol_detail=detail),
+            "red_flags": search_red_flags(meta["name"], protocol_detail=detail, hacks=hacks),
         }
 
     report = build_report(detail, meta, hacks, tvl_history_days=180, web_research=web_research, verified_only=verified_only)
