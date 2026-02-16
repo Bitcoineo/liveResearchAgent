@@ -17,7 +17,9 @@
       "WebSearch",
       "Bash(python3:*)",
       "Bash(ls:*)",
-      "WebFetch(domain:unavatar.io)"
+      "WebFetch(domain:unavatar.io)",
+      "WebFetch(domain:icons.llama.fi)",
+      "Bash(curl:*)"
     ]
   }
 }

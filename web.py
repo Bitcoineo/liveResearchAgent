@@ -338,15 +338,10 @@ a:hover{color:var(--accent-light)}
 .grade-bar.grade-critical .grade-value{color:#991b1b}
 .grade-bar.grade-unknown .grade-value{color:#475569}
 
-.grade-bar .grade-dots{display:flex;gap:4px;margin-left:auto}
-.grade-bar .grade-dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,0.08)}
-.grade-bar .grade-dot.active{background:currentColor}
 .grade-bar .grade-reason{
   width:100%;font-size:12px;color:var(--text-secondary);
   margin-top:2px;line-height:1.4;
 }
-.grade-bar.grade-score .grade-dots{gap:3px}
-.grade-bar.grade-score .grade-dot{width:7px;height:7px}
 .grade-bar.grade-score .grade-max{font-size:12px;font-weight:500;color:var(--text-dim)}
 
 /* ─── Footer ─── */
@@ -400,7 +395,7 @@ a:hover{color:var(--accent-light)}
         <span>Lido</span>
       </div>
       <div class="protocol-card" onclick="selectChip(this)" data-protocol="Ethena">
-        <img src="https://unavatar.io/x/ethena_labs" alt="Ethena" loading="lazy">
+        <img src="https://icons.llama.fi/ethena.png" alt="Ethena" loading="lazy">
         <span>Ethena</span>
       </div>
       <div class="protocol-card" onclick="selectChip(this)" data-protocol="Uniswap">
@@ -415,9 +410,9 @@ a:hover{color:var(--accent-light)}
         <img src="https://unavatar.io/x/pendle_fi" alt="Pendle" loading="lazy">
         <span>Pendle</span>
       </div>
-      <div class="protocol-card" onclick="selectChip(this)" data-protocol="EigenLayer">
-        <img src="https://unavatar.io/x/eigenlayer" alt="EigenLayer" loading="lazy">
-        <span>EigenLayer</span>
+      <div class="protocol-card" onclick="selectChip(this)" data-protocol="EigenCloud">
+        <img src="https://unavatar.io/x/eigenfoundation" alt="EigenCloud" loading="lazy">
+        <span>EigenCloud</span>
       </div>
       <div class="protocol-card" onclick="selectChip(this)" data-protocol="Hyperliquid">
         <img src="https://unavatar.io/x/HyperliquidX" alt="Hyperliquid" loading="lazy">
@@ -566,12 +561,7 @@ function enhanceReport(html) {
     /<strong>Overall Risk Level<\/strong>:\s*(LOW|MEDIUM|HIGH|CRITICAL|UNKNOWN)/i,
     function(_, level) {
       const lc = level.toLowerCase();
-      const colors = {low:"badge-green",medium:"badge-amber",high:"badge-red",critical:"badge-critical",unknown:"badge-gray"};
-      const fills = {low:1,medium:2,high:3,critical:4,unknown:0};
-      const n = fills[lc] || 0;
-      let dots = "";
-      for (let i = 1; i <= 4; i++) dots += '<span class="grade-dot' + (i <= n ? " active" : "") + '"></span>';
-      return '<div class="grade-bar grade-' + lc + '"><span class="grade-label">Risk Level</span><span class="grade-value">' + level + '</span><span class="grade-dots">' + dots + '</span></div>';
+      return '<div class="grade-bar grade-' + lc + '"><span class="grade-label">Risk Level</span><span class="grade-value">' + level + '</span></div>';
     }
   );
 

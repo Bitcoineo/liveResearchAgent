@@ -491,7 +491,7 @@ def _render_third_party_intel(report: dict) -> str:
             lines.append("")
 
         bounty = audit.get("bug_bounty", {})
-        if bounty:
+        if bounty.get("active"):
             status = "Active" if bounty.get("active") else "Inactive"
             lines.append(f"**Bug Bounty Program**: {status}  ")
             lines.append(f"**Platform**: {bounty.get('platform', 'N/A')}  ")
@@ -582,9 +582,6 @@ def _render_unresolved_questions(report: dict) -> str:
     # Check for empty DeFiLlama sections
     if report.get("funding", {}).get("total_raised_usd_millions", 0) == 0:
         questions.append("**Funding history**: No publicly recorded funding rounds in DeFiLlama")
-    if report.get("hacks", {}).get("total_hacks", 0) == 0:
-        questions.append("**Security incidents**: No security incidents recorded in DeFiLlama")
-
     lines = ["## Data Limitations", ""]
 
     if questions:
@@ -594,7 +591,7 @@ def _render_unresolved_questions(report: dict) -> str:
             lines.append(f"- {q}")
         lines.append("")
     else:
-        lines.append("All data sections verified against live sources.")
+        lines.append("No significant data gaps identified.")
         lines.append("")
 
     lines.append("---")
