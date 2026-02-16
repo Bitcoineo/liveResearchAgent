@@ -156,22 +156,6 @@ a:hover{color:var(--accent-light)}
 }
 .generate-btn:active{transform:scale(0.97)}
 
-/* ─── Toggle Row ─── */
-.toggle-row{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:24px;
-  opacity:0;animation:fadeUp 0.8s ease forwards;
-  animation-delay:0.4s;
-}
-.toggle-label{
-  display:flex;align-items:center;gap:8px;
-  cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);
-}
-.toggle-label input[type="checkbox"]{
-  width:18px;height:18px;accent-color:var(--accent);cursor:pointer;
-}
-.toggle-hint{font-size:12px;color:var(--text-dim)}
-
 /* ─── Protocol Grid ─── */
 .protocol-grid{
   display:flex;flex-wrap:wrap;gap:12px;
@@ -406,14 +390,6 @@ a:hover{color:var(--accent-light)}
       <button class="generate-btn" onclick="generateReport()">Generate</button>
     </div>
 
-    <div class="toggle-row">
-      <label class="toggle-label">
-        <input type="checkbox" id="verified-toggle" checked>
-        <span>Verified data only</span>
-      </label>
-      <span class="toggle-hint">(uncheck to include full web research)</span>
-    </div>
-
     <div class="protocol-grid">
       <div class="protocol-card" onclick="selectChip(this)" data-protocol="Aave">
         <img src="https://unavatar.io/x/AaveAave" alt="Aave" loading="lazy">
@@ -434,6 +410,18 @@ a:hover{color:var(--accent-light)}
       <div class="protocol-card" onclick="selectChip(this)" data-protocol="Maker">
         <img src="https://unavatar.io/x/MakerDAO" alt="Maker" loading="lazy">
         <span>Maker</span>
+      </div>
+      <div class="protocol-card" onclick="selectChip(this)" data-protocol="Pendle">
+        <img src="https://unavatar.io/x/pendle_fi" alt="Pendle" loading="lazy">
+        <span>Pendle</span>
+      </div>
+      <div class="protocol-card" onclick="selectChip(this)" data-protocol="EigenLayer">
+        <img src="https://unavatar.io/x/eigenlayer" alt="EigenLayer" loading="lazy">
+        <span>EigenLayer</span>
+      </div>
+      <div class="protocol-card" onclick="selectChip(this)" data-protocol="Hyperliquid">
+        <img src="https://unavatar.io/x/HyperliquidX" alt="Hyperliquid" loading="lazy">
+        <span>Hyperliquid</span>
       </div>
     </div>
 
@@ -529,7 +517,6 @@ async function generateReport() {
   const protocol = input.value.trim();
   if (!protocol) { input.focus(); return; }
 
-  const verifiedOnly = document.getElementById("verified-toggle").checked;
   showView("loading");
 
   try {
@@ -538,7 +525,7 @@ async function generateReport() {
     const resp = await fetch("/api/report", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({protocol: protocol, verified_only: verifiedOnly}),
+      body: JSON.stringify({protocol: protocol}),
       signal: controller.signal
     });
     clearTimeout(timeout);
@@ -652,7 +639,7 @@ function newReport() {
 </html>"""
 
 
-def _run_report(protocol_name: str, verified_only: bool = True) -> tuple:
+def _run_report(protocol_name: str) -> tuple:
     """Run the full report pipeline. Returns (markdown, filename)."""
     client = DefiLlamaClient()
     meta = client.resolve_protocol(protocol_name)
@@ -661,16 +648,14 @@ def _run_report(protocol_name: str, verified_only: bool = True) -> tuple:
     child_names = [c["name"] for c in meta["children"]]
     hacks = client.find_hacks_for_protocol(meta["name"], child_names)
 
-    web_research = None
-    if not verified_only:
-        web_research = {
-            "analyst_coverage": search_analyst_coverage(meta["name"], protocol_detail=detail),
-            "audit_reports": search_audit_reports(meta["name"]),
-            "community_sentiment": search_community_sentiment(meta["name"], protocol_detail=detail),
-            "red_flags": search_red_flags(meta["name"], protocol_detail=detail, hacks=hacks),
-        }
+    web_research = {
+        "analyst_coverage": search_analyst_coverage(meta["name"], protocol_detail=detail),
+        "audit_reports": search_audit_reports(meta["name"]),
+        "community_sentiment": search_community_sentiment(meta["name"], protocol_detail=detail),
+        "red_flags": search_red_flags(meta["name"], protocol_detail=detail, hacks=hacks),
+    }
 
-    report = build_report(detail, meta, hacks, tvl_history_days=180, web_research=web_research, verified_only=verified_only)
+    report = build_report(detail, meta, hacks, tvl_history_days=180, web_research=web_research)
     md = render_markdown(report)
 
     slug = report["metadata"]["slug"]
@@ -715,13 +700,12 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         protocol = body.get("protocol", "").strip()
-        verified_only = body.get("verified_only", True)
         if not protocol:
             self._json_error(400, "Missing 'protocol' field")
             return
 
         try:
-            md, filename = _run_report(protocol, verified_only=verified_only)
+            md, filename = _run_report(protocol)
             self._json_response(200, {"success": True, "markdown": md, "filename": filename})
         except ProtocolNotFoundError as e:
             self._json_error(404, str(e))

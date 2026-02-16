@@ -82,7 +82,6 @@ def _render_executive_summary(report: dict) -> str:
     tvl = report.get("tvl", {})
     chains = report.get("chains", {})
     red_flags = report.get("red_flags", {})
-    verified_only = report.get("verified_only", False)
 
     name = metadata["protocol_name"]
     category = metadata.get("category", "Unknown")
@@ -91,9 +90,7 @@ def _render_executive_summary(report: dict) -> str:
     risk_level = red_flags.get("risk_level", "unknown") if red_flags else "unknown"
 
     # Verdict
-    if verified_only:
-        tone = "a profile based on on-chain data — enable full report for risk assessment"
-    elif risk_level in ("low",):
+    if risk_level in ("low",):
         tone = "strong fundamentals with limited risk indicators"
     elif risk_level in ("medium",):
         tone = "solid fundamentals with moderate risk factors worth monitoring"
@@ -127,19 +124,12 @@ def _render_executive_summary(report: dict) -> str:
         "",
     ]
 
-    if verified_only:
-        lines.append("*Score based on on-chain data only — web research sections excluded.*")
-        lines.append("")
-
     # Score breakdown
     lines.append("**Score Breakdown**:")
     lines.append("")
     for dimension, value in breakdown.items():
-        if value is None:
-            lines.append(f"- {dimension}: *N/A (on-chain data only)*")
-        else:
-            sign = "+" if value >= 0 else ""
-            lines.append(f"- {dimension}: {sign}{value}")
+        sign = "+" if value >= 0 else ""
+        lines.append(f"- {dimension}: {sign}{value}")
     lines.append("")
 
     lines.append("**Top Risks**:")
@@ -166,13 +156,12 @@ def _calculate_global_score(report: dict) -> tuple:
     On-chain dimensions (always available):
       TVL strength (0–2.5), Multi-chain (0–1.5), Security record (−3–2),
       Funding (0–1.5).
-    Web-research dimensions (only when verified_only=False):
+    Web-research dimensions:
       Risk profile (−2–2), Audit & bounty (0–1.5).
     Raw sum is normalized to 0–10.
     """
     import math
     breakdown = {}
-    verified_only = report.get("verified_only", False)
 
     # --- TVL strength (0–2.5) — logarithmic, diminishing above $10B ---
     tvl = report.get("tvl", {}).get("current_tvl_usd", 0)
@@ -235,34 +224,29 @@ def _calculate_global_score(report: dict) -> tuple:
     else:
         breakdown["Funding"] = 0.4
 
-    # --- Web-research dimensions (only when web research included) ---
-    if not verified_only:
-        # Risk profile — per-flag penalty
-        flags = report.get("red_flags", {}).get("flags", [])
-        severity_penalties = {"critical": 2.0, "high": 1.5, "medium": 1.0, "low": 0.5}
-        flag_penalty = sum(severity_penalties.get(f.get("severity", "low"), 0.5) for f in flags)
-        breakdown["Risk profile"] = round(max(-2.0, 2.0 - flag_penalty), 2)
+    # --- Web-research dimensions ---
+    # Risk profile — per-flag penalty
+    flags = report.get("red_flags", {}).get("flags", [])
+    severity_penalties = {"critical": 2.0, "high": 1.5, "medium": 1.0, "low": 0.5}
+    flag_penalty = sum(severity_penalties.get(f.get("severity", "low"), 0.5) for f in flags)
+    breakdown["Risk profile"] = round(max(-2.0, 2.0 - flag_penalty), 2)
 
-        # Audit & bounty
-        audit_sec = report.get("audit_security", {})
-        has_bounty = audit_sec.get("bug_bounty", {}).get("active", False)
-        has_audits = len(audit_sec.get("audits", [])) > 0
-        if has_bounty and has_audits:
-            breakdown["Audit & bounty"] = 1.5
-        elif has_audits:
-            breakdown["Audit & bounty"] = 1.0
-        elif has_bounty:
-            breakdown["Audit & bounty"] = 0.5
-        else:
-            breakdown["Audit & bounty"] = 0.0
+    # Audit & bounty
+    audit_sec = report.get("audit_security", {})
+    has_bounty = audit_sec.get("bug_bounty", {}).get("active", False)
+    has_audits = len(audit_sec.get("audits", [])) > 0
+    if has_bounty and has_audits:
+        breakdown["Audit & bounty"] = 1.5
+    elif has_audits:
+        breakdown["Audit & bounty"] = 1.0
+    elif has_bounty:
+        breakdown["Audit & bounty"] = 0.5
     else:
-        breakdown["Risk profile"] = None
-        breakdown["Audit & bounty"] = None
+        breakdown["Audit & bounty"] = 0.0
 
     # --- Normalize to 0–10 ---
-    active_values = [v for v in breakdown.values() if v is not None]
-    raw_total = sum(active_values)
-    max_possible = 7.5 if verified_only else 11.0
+    raw_total = sum(breakdown.values())
+    max_possible = 11.0
     score = round(max(0, min(10, (raw_total / max_possible) * 10)), 1)
 
     return (score, breakdown)

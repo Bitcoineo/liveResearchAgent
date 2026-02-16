@@ -16,7 +16,8 @@
       "WebFetch(domain:diligence.security)",
       "WebSearch",
       "Bash(python3:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebFetch(domain:unavatar.io)"
     ]
   }
 }
