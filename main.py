@@ -43,7 +43,7 @@ def main():
     )
     parser.add_argument("protocol", help="Protocol name (e.g., 'aave', 'uniswap', 'lido')")
     parser.add_argument("--days", type=int, default=180, help="Days of TVL history (default: 180)")
-    parser.add_argument("--full", action="store_true", help="Include web research template sections (default: verified on-chain data only)")
+    parser.add_argument("--full", action="store_true", help="Include full web research sections (default: verified on-chain data only)")
     parser.add_argument("--json", action="store_true", dest="raw_json", help="Output raw JSON")
     args = parser.parse_args()
 

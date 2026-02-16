@@ -82,7 +82,7 @@ The report pipeline produces a dict with these top-level keys:
   defillama.py         DeFiLlama API client with caching + fuzzy resolution
   report.py            Structured report builder
   markdown_report.py   Markdown renderer
-  web_research.py      Web research module (template data)
+  web_research.py      Web research module (live data)
   requirements.txt     Python dependencies
   reports/             Generated .md reports (gitignored)
 ```
@@ -90,7 +90,7 @@ The report pipeline produces a dict with these top-level keys:
 ## Current Status
 
 - **DeFiLlama data**: Live — TVL, chains, funding, hacks, hallmarks
-- **Web research**: Template data from Bitcoineo research — live source integration planned
+- **Web research**: Live — audit reports (GitHub + Immunefi), red flags (DeFiLlama + Etherscan), community sentiment (GitHub + Snapshot), analyst coverage (DeFiLlama + GitHub README)
 - **Global Score**: Synthesizes TVL, security, risk, audits, and funding into a 0–10 rating
 
 ## Credits

@@ -235,7 +235,7 @@ def _calculate_global_score(report: dict) -> tuple:
     else:
         breakdown["Funding"] = 0.4
 
-    # --- Web-research dimensions (only when templates included) ---
+    # --- Web-research dimensions (only when web research included) ---
     if not verified_only:
         # Risk profile — per-flag penalty
         flags = report.get("red_flags", {}).get("flags", [])
@@ -445,7 +445,7 @@ def _render_onchain_findings(report: dict) -> str:
     return "\n".join(lines)
 
 
-_TEMPLATE_BANNER = "> ⚠️ **Template Data** — This section uses research templates and has not been verified against live sources."
+_TEMPLATE_BANNER = "> ⚠️ **Unverified Data** — This section contains data that could not be verified against live sources."
 
 
 def _is_placeholder_url(url: str) -> bool:
@@ -593,7 +593,7 @@ def _render_unresolved_questions(report: dict) -> str:
     for key, label in section_labels.items():
         section = report.get(key, {})
         if section.get("data_source") == "placeholder":
-            questions.append(f"**{label}**: Based on Bitcoineo research templates — not yet verified against live sources")
+            questions.append(f"**{label}**: Data source unavailable — could not be verified against live sources")
 
     # Check for empty DeFiLlama sections
     if report.get("funding", {}).get("total_raised_usd_millions", 0) == 0:

@@ -411,7 +411,7 @@ a:hover{color:var(--accent-light)}
         <input type="checkbox" id="verified-toggle" checked>
         <span>Verified data only</span>
       </label>
-      <span class="toggle-hint">(uncheck to include research templates)</span>
+      <span class="toggle-hint">(uncheck to include full web research)</span>
     </div>
 
     <div class="protocol-grid">
@@ -599,10 +599,10 @@ function enhanceReport(html) {
     }
   );
 
-  // Template data warning banners — amber styling
+  // Unverified data warning banners — amber styling
   html = html.replace(
-    /<blockquote>\s*<p>\s*⚠️\s*<strong>Template Data<\/strong>/g,
-    '<blockquote style="border-left-color:#d97706;background:rgba(245,158,11,0.08);"><p>⚠️ <strong>Template Data</strong>'
+    /<blockquote>\s*<p>\s*⚠️\s*<strong>Unverified Data<\/strong>/g,
+    '<blockquote style="border-left-color:#d97706;background:rgba(245,158,11,0.08);"><p>⚠️ <strong>Unverified Data</strong>'
   );
 
   // Sentiment badges in tables and inline
