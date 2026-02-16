@@ -380,6 +380,9 @@ def _render_onchain_findings(report: dict) -> str:
         lines.append("|------|-------|--------|----------------|")
         for r in rounds:
             date = _fmt_date(r["date"])
+            source_url = r.get("source_url", "")
+            if source_url:
+                date = f"[{date}]({source_url})"
             rtype = r.get("round_type") or "N/A"
             amount = f"${r['amount_usd_millions']:.0f}M" if r.get("amount_usd_millions") else "N/A"
             leads = ", ".join(r.get("lead_investors", [])) or "N/A"
@@ -405,6 +408,9 @@ def _render_onchain_findings(report: dict) -> str:
         lines.append("|------|------------|-------|----------------|----------|")
         for inc in incidents:
             date = _fmt_date(inc["date"])
+            source_url = inc.get("source_url", "")
+            if source_url:
+                date = f"[{date}]({source_url})"
             lost = _fmt_usd(inc["amount_lost_usd"])
             chain = ", ".join(inc["chain"]) if isinstance(inc["chain"], list) else str(inc["chain"])
             classification = inc.get("classification", "N/A")
@@ -485,8 +491,12 @@ def _render_third_party_intel(report: dict) -> str:
             lines.append("| Auditor | Date | Scope | Findings |")
             lines.append("|---------|------|-------|----------|")
             for a in audits:
+                auditor = a["auditor"]
+                report_url = a.get("report_url", "")
+                if report_url:
+                    auditor = f"[{auditor}]({report_url})"
                 lines.append(
-                    f"| {a['auditor']} | {_fmt_date(a['date'])} | {a['scope']} | {a['findings_summary']} |"
+                    f"| {auditor} | {_fmt_date(a['date'])} | {a['scope']} | {a['findings_summary']} |"
                 )
             lines.append("")
 
