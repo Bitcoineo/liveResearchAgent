@@ -51,3 +51,13 @@
 - [x] Responsive breakpoint (≤640px): smaller title, full-width search, compact cards
 - [x] Update README.md with new UI description
 - [ ] Verify: all flows work (generate, download, new report, error handling, responsive)
+
+## Phase 7: Live Web Research (Phase 5 Data Wiring)
+- [x] `search_audit_reports()` — GitHub org-scoped search across 13 known audit firms (Trail of Bits, OpenZeppelin, Sherlock, Certora, etc.) + Immunefi bug bounty detection
+- [x] `search_red_flags()` — DeFiLlama protocol analysis (chain concentration, TVL decline, protocol age, hack history, funding gaps) + Etherscan contract verification
+- [x] `search_community_sentiment()` — GitHub commits API for developer activity (commit frequency, open issues, contributors) + Snapshot v1 GraphQL for governance (proposal counts, voter participation)
+- [x] `search_analyst_coverage()` — DeFiLlama metadata (website, Twitter, audit links) + GitHub README parsing (documentation, governance, community, blog, security, analytics links)
+- [x] Remove `verified_only` toggle — all reports now include full web research by default
+- [x] Add clickable links to funding rounds (source_url), audit reports (report_url), and security incidents (source_url)
+- [x] Hide inactive bug bounty subsection, fix Data Limitations empty state, remove risk level dots
+- [x] Update all user-facing text: "template data" → "live data", "research templates" → "full web research"

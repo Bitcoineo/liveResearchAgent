@@ -76,7 +76,7 @@ The report pipeline produces a dict with these top-level keys:
 ## Project Files
 
 ```
-4.defiAgent/
+5.liveResearchAgent/
   main.py              CLI entry point
   web.py               Web UI server (port 8000)
   defillama.py         DeFiLlama API client with caching + fuzzy resolution

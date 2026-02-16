@@ -1,18 +1,17 @@
 ## Project Context
 This is a DeFi research agent that generates due diligence reports.
-Phase 1-4 are complete. Phase 5 is wiring up real web research data.
+All phases complete. All web research functions use live data sources.
 
 ## Key Files
-- web_research.py — THIS IS THE FILE BEING REWRITTEN. Currently returns placeholder data.
-- defillama.py — API client. Working. Don't modify unless adding new endpoints.
-- report.py — Report builder. May need minor updates for new data shapes.
-- markdown_report.py — Markdown renderer. May need updates for new sections.
-- main.py — Orchestrator. Minimal changes expected.
+- web_research.py — Live web research: GitHub API, Snapshot GraphQL, Immunefi, DeFiLlama metadata
+- defillama.py — DeFiLlama API client with caching + fuzzy resolution
+- report.py — Structured report builder (pass-through for web research data)
+- markdown_report.py — Markdown renderer with scoring, tables, and link rendering
+- main.py — CLI orchestrator
+- web.py — Web UI server (port 8000)
 
-## Rules for Phase 5
-- Every data source must have error handling — never crash if a source is down
-- Every function in web_research.py must still return the same dict structure
-- Keep "data_source" field but change value from "placeholder" to the actual source name
-- If a real source fails, fall back to returning empty data — NOT placeholder data
-- Add retry logic (3 attempts with backoff) for all HTTP requests
-- Respect rate limits — add delays between requests to the same domain
+## Architecture Notes
+- All HTTP requests use `_fetch_with_retry()` (3 attempts, exponential backoff, rate limiting)
+- Every function returns the same dict structure; `data_source` field indicates which live sources contributed
+- If a source fails, functions fall back to empty data — never crash, never return placeholder data
+- GitHub unauthenticated rate limit: 60 req/hr. A full report uses ~8 calls. Be careful in debug sessions.
