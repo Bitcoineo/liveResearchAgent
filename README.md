@@ -1,98 +1,69 @@
-# Bitcoineo DeFi Research Agent
+# DeFi Research Agent v2
 
-Automated DeFi protocol due diligence reports powered by live DeFiLlama data. Generates comprehensive markdown reports with on-chain analysis, third-party intelligence, and risk assessment.
+Automated DeFi protocol due diligence with fully live data. Pulls TVL history, audit reports, red flags, governance activity, and community sentiment in real time, then synthesizes everything into a structured markdown report with a 0-10 risk score.
 
-## Features
+**Stack:** `Python 3 · DeFiLlama API · GitHub API · Snapshot GraphQL · Etherscan · requests · marked.js`
 
-- **Live on-chain data** — TVL, multi-chain deployment, funding history, security incidents, key events
-- **Third-party intelligence** — Analyst coverage, security audits, community sentiment, red flags
-- **Structured reports** — Executive summary, risk scoring, global scoring, data limitations
-- **Dual interface** — CLI for scripting, minimal web UI with protocol quick-picks
-- **Markdown output** — Reports saved to `reports/` with timestamped filenames
+---
 
-## Tech Stack
+## Why I built this
 
-- **Python 3** — stdlib HTTP server, no web framework
-- **DeFiLlama API** — Protocol data, TVL history, hacks, funding rounds
-- **requests** — HTTP client for API calls
-- **marked.js** — Client-side markdown rendering (CDN)
+The first version of this agent used static template data for the web research sections. That made the reports feel hollow. This version replaces every placeholder with live API calls: audit reports sourced from known audit firm GitHub orgs, red flags derived from actual DeFiLlama hack history and Etherscan contract verification, governance data from Snapshot, and developer activity from GitHub. The reports are now genuinely useful for due diligence.
 
-## Installation
+## What a report contains
 
-```bash
-pip install -r requirements.txt
-```
+1. **Executive Summary** Verdict, global score (0-10), top, positive signals
+2. **On-Chain Findings** TVL, multi-chain deployment, funding history, security incidents, key events
+3. **Third-Party Intelligence** Live audit reports, bug bounty info, community sentiment
+4. **Red Flags Register** Severity-ranked risk indicators derived from live data
+5. **Data Limitations** Gaps and areas needing further investigation
+
+## Live Data Sources
+
+| Section | Source |
+|---------|--------|
+| TVL, chains, funding, hacks | DeFiLlama API |
+| Audit reports | GitHub API (Trail of Bits, OpenZeppelin, Certora, Sherlock, Code4rena, and more) |
+| Bug bounty | Immunefi (best-effort, degrades gracefully) |
+| Red flags | DeFiLlama hack history + Etherscan contract verification |
+| Governance | Snapshot GraphQL (proposal counts, voter participation) |
+| Developer activity | GitHub API (commit frequency, open issues, contributors) |
 
 ## Usage
 
 ### CLI
 
-```bash
-# Generate a report for Aave (default 30 days TVL history)
-python3 main.py aave
+    pip install -r requirements.txt
 
-# Custom TVL history window
-python3 main.py aave --days 90
+    python3 main.py aave
+    python3 main.py aave --days 90
+    python3 main.py uniswap --json
 
-# Raw JSON output
-python3 main.py uniswap --json
-```
-
-Reports are saved to `reports/<slug>-<date>.md` and JSON is printed to stdout.
+Reports are saved to reports/<slug>-<date>.md.
 
 ### Web UI
 
-```bash
-python3 web.py
-```
+    python3 web.py
 
-Open [http://localhost:8000](http://localhost:8000) in your browser. Type a protocol name in the search bar and press Enter (or click Generate), or click one of the protocol cards (Aave, Lido, Ethena, Uniswap, Maker) for instant analysis. Reports render inline with markdown formatting and can be downloaded as `.md` files.
+Open http://localhost:8000. Type any protocol name or use the quick-pick cards (Aave, Lido, Ethena, Uniswap, Maker). Reports render inline and can be downloaded as .md files.
 
-## Report Structure
+## Project Structure
 
-1. **Executive Summary** — Verdict, global score (0–10), top risks, positive signals
-2. **On-Chain Findings** — TVL, multi-chain deployment, funding history, security incidents, key events
-3. **Third-Party Intelligence** — Analyst coverage, security audits, community sentiment
-4. **Red Flags Register** — Severity-ranked risk indicators
-5. **Data Limitations** — Data gaps and areas needing further investigation
+    main.py              CLI entry point
+    web.py               Web UI server (port 8000)
+    defillama.py         DeFiLlama API client with caching and fuzzy resolution
+    report.py            Structured report builder
+    markdown_report.py   Markdown renderer
+    web_research.py      Live web research module
+    requirements.txt     Dependencies
+    reports/             Generated reports (gitignored)
 
-## API Structure
+## Status
 
-The report pipeline produces a dict with these top-level keys:
+- DeFiLlama data: Live
+- Web research: Live (audit reports, red flags, governance, developer activity)
+- Global Score: Synthesizes TVL, security, audits, and funding into a 0-10 rating
 
-| Key | Source | Description |
-|-----|--------|-------------|
-| `metadata` | DeFiLlama | Protocol name, slug, category, description, URL |
-| `tvl` | DeFiLlama | Current TVL + historical time series |
-| `chains` | DeFiLlama | Deployed chains with per-chain TVL |
-| `funding` | DeFiLlama | Funding rounds, investors, total raised |
-| `hacks` | DeFiLlama | Security incidents, losses, returned funds |
-| `hallmarks` | DeFiLlama | Key protocol events timeline |
-| `analyst_coverage` | Web Research | Articles and research reports |
-| `audit_security` | Web Research | Audit reports and bug bounty info |
-| `community_sentiment` | Web Research | Sentiment analysis and governance activity |
-| `red_flags` | Web Research | Risk indicators and severity ratings |
+## GitHub Topics
 
-## Project Files
-
-```
-5.liveResearchAgent/
-  main.py              CLI entry point
-  web.py               Web UI server (port 8000)
-  defillama.py         DeFiLlama API client with caching + fuzzy resolution
-  report.py            Structured report builder
-  markdown_report.py   Markdown renderer
-  web_research.py      Web research module (live data)
-  requirements.txt     Python dependencies
-  reports/             Generated .md reports (gitignored)
-```
-
-## Current Status
-
-- **DeFiLlama data**: Live — TVL, chains, funding, hacks, hallmarks
-- **Web research**: Live — audit reports (GitHub + Immunefi), red flags (DeFiLlama + Etherscan), community sentiment (GitHub + Snapshot), analyst coverage (DeFiLlama + GitHub README)
-- **Global Score**: Synthesizes TVL, security, risk, audits, and funding into a 0–10 rating
-
-## Credits
-
-Built by [Bitcoineo](https://x.com/Bitcoineo). Protocol data from [DeFiLlama](https://defillama.com).
+`defi` `python` `due-diligence` `defillama` `tvl` `risk-assessment` `agent` `crypto` `github-api` `snapshot`
